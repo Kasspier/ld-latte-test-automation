@@ -79,7 +79,7 @@ docs/                    архитектура, API, тестирование, 
 
 Приложение рассчитано на обычный Next.js-хостинг: например, Vercel или Node.js-сервер. Загрузите исходники в свой Git-репозиторий, задайте две переменные окружения, выполните сборку и укажите HTTPS Site URL в Supabase. При использовании reverse proxy сохраняйте исходный host/protocol, чтобы проверка Origin совпадала с публичным адресом. При переходе на новый домен проверьте повторный вход и cookie-сессию.
 
-Исходники опубликованы в [приватном общем репозитории](https://github.com/Kasspier/ld-latte-test-automation/tree/review/all-tasks/ld-latte-requests). В нём находятся все три задания; проверяющему нужно предоставить доступ GitHub. Публичное HTTPS-размещение веб-сервиса пока ожидает разрешения Vercel на рабочее пространство владельца.
+Исходники опубликованы в [приватном общем репозитории](https://github.com/Kasspier/ld-latte-test-automation/tree/review/all-tasks/ld-latte-requests). В нём находятся все три задания; проверяющему нужно предоставить доступ GitHub. Работающий HTTPS-сайт: [https://ld-latte-requests-omega.vercel.app](https://ld-latte-requests-omega.vercel.app). Размещён на бесплатном Vercel Hobby из проверенной копии исходников. Автоматический Git-деплой пока не подключён: в Vercel отсутствует GitHub Login Connection. Для повторного размещения используйте API/CLI либо сначала настройте Git-интеграцию.
 
 ## Документация
 

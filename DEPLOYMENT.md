@@ -1,4 +1,19 @@
-# Публикация и доступ для просмотра
+# Фактическое размещение
+
+Сайт: https://ld-latte-requests-omega.vercel.app
+
+- Team: Kasspier (`team_4rFzfSUp3jf65sBz8cd02MfK`), Hobby.
+- Project: ld-latte-requests (`prj_U6rkk2DhE7QQt8uHZucP23kVemyy`).
+- Production READY: `dpl_7KbhexufBbc8E63Duj9H8qUBaqv3`.
+- Код: Git-коммит `2e765a0b9a06c8ce5a108b08f4488b93290770fa`, ветка `review/all-tasks`.
+- Источник: проверенные текстовые файлы веб-приложения через Vercel API, Root Directory `ld-latte-requests`, Node.js 24.x, Next.js 16.4.5.
+- Supabase: две публичные клиентские переменные проекта, service role не используется.
+- Основной домен открыт внешним посетителям; вход в приложение и RLS продолжают защищать пользовательские данные. Standard Deployment Protection сохранена для preview и сгенерированных адресов сборок.
+- Платный план, платные дополнения и собственный домен не подключались.
+
+Git-интеграция Vercel не настроена: попытка связать проект получила ошибку «add a Login Connection to your GitHub account first». Поэтому push в GitHub не обновляет сайт автоматически. Ниже — инструкция для будущего подключения. После архивации репозитория для изменений его нужно сначала разархивировать.
+
+## Настройка публикации и доступа для просмотра
 
 ## Веб-сервис
 
