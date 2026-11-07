@@ -239,7 +239,7 @@ code {
 .auth-page {
   min-height: 100dvh;
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 .auth-story {
   position: relative;
@@ -303,6 +303,7 @@ code {
 }
 .auth-side {
   display: flex;
+  min-width: 0;
   align-items: center;
   justify-content: center;
   position: relative;
@@ -1240,7 +1241,7 @@ code {
 }
 @media (max-width: 760px) {
   .auth-page {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
   .auth-story {
     min-height: 0;
@@ -1257,6 +1258,9 @@ code {
   }
   .auth-story h1 br:nth-child(2) {
     display: none;
+  }
+  .auth-story h1 em {
+    display: block;
   }
   .auth-story p {
     display: none;
