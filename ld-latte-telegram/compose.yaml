@@ -1,0 +1,74 @@
+name: ld-latte-telegram
+services:
+  postgres:
+    image: postgres:16-alpine@sha256:721873c34ceb9f8d8fc265984940dc982404c105f19ad51be9fdc5970a6080ea
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: latte_admin
+      POSTGRES_DB: latte_catalog
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Run npm run setup}
+      BOT_DB_PASSWORD: ${BOT_DB_PASSWORD:?Run npm run setup}
+    volumes:
+      - catalog_data:/var/lib/postgresql/data
+      - ./db:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: [CMD-SHELL, pg_isready -U latte_admin -d latte_catalog]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+  n8n:
+    image: docker.n8n.io/n8nio/n8n:2.46.6@sha256:8602f5dfacbe2c931eeafd010de0e68182310e9f309921e780ab69182e92b3ae
+    restart: unless-stopped
+    entrypoint: [/bin/sh, /bootstrap/start.sh]
+    environment:
+      N8N_ENCRYPTION_KEY: ${N8N_ENCRYPTION_KEY:?Run npm run setup}
+      N8N_HOST: localhost
+      N8N_PORT: '5678'
+      N8N_PROTOCOL: http
+      N8N_SECURE_COOKIE: 'false'
+      N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS: 'true'
+      N8N_DIAGNOSTICS_ENABLED: 'false'
+      N8N_PERSONALIZATION_ENABLED: 'false'
+      N8N_VERSION_NOTIFICATIONS_ENABLED: 'false'
+      N8N_RUNNERS_MODE: internal
+      N8N_UNVERIFIED_PACKAGES_ENABLED: 'false'
+      N8N_LOG_LEVEL: warn
+      GENERIC_TIMEZONE: Europe/Moscow
+      TZ: Europe/Moscow
+      EXECUTIONS_DATA_SAVE_ON_SUCCESS: none
+      EXECUTIONS_DATA_SAVE_ON_ERROR: none
+      EXECUTIONS_DATA_SAVE_MANUAL_EXECUTIONS: 'false'
+    ports: ['127.0.0.1:5678:5678']
+    volumes:
+      - n8n_data:/home/node/.n8n
+      - ./bootstrap/start.sh:/bootstrap/start.sh:ro
+      - ./workflow/LD-LATTE-menu.json:/bootstrap/workflow.json:ro
+      - ./.private/credentials.local.json:/bootstrap/credentials.local.json:ro
+    depends_on:
+      postgres: {condition: service_healthy}
+    healthcheck:
+      test: [CMD, node, -e, "fetch('http://127.0.0.1:5678/healthz/readiness').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      start_period: 90s
+      retries: 20
+  telegram-relay:
+    image: node:24-alpine@sha256:a34ab6d7f6f4813f4d0c5469d74685604b962fbdbf5793a7bc7b4998ecb867c8
+    restart: unless-stopped
+    working_dir: /app
+    command: [node, src/relay.mjs]
+    environment:
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+      ALLOWED_USER_IDS: ${ALLOWED_USER_IDS:-}
+      RELAY_SECRET: ${RELAY_SECRET:?Run npm run setup}
+      N8N_URL: http://n8n:5678/webhook/ld-latte-menu
+      STATE_FILE: /state/offset.json
+    volumes:
+      - ./src:/app/src:ro
+      - relay_state:/state
+    depends_on:
+      n8n: {condition: service_healthy}
+volumes:
+  catalog_data:
+  n8n_data:
+  relay_state:

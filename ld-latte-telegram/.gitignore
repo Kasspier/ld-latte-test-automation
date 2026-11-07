@@ -1,0 +1,5 @@
+.env
+.private/
+runtime/
+output/*.local.json
+node_modules/

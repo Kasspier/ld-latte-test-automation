@@ -1,0 +1,10 @@
+node_modules/
+.next/
+.env*
+!.env.example
+coverage/
+*.tsbuildinfo
+postman/*.local.json
+postman/*.local.postman_environment.json
+test-results/
+.tools/

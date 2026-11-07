@@ -1,0 +1,34 @@
+{
+  "name": "ld-latte-requests",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "next dev --hostname 127.0.0.1",
+    "build": "next build",
+    "start": "next start --hostname 127.0.0.1",
+    "typecheck": "tsc --noEmit",
+    "format": "prettier --write .",
+    "test": "vitest run",
+    "postman:generate": "node scripts/generate-postman.mjs",
+    "test:postman": "postman collection run postman/LD-LATTE.postman_collection.json -e postman/local.postman_environment.json",
+    "test:postman:smoke": "postman collection run postman/LD-LATTE.postman_collection.json -e postman/local.postman_environment.json -i \"00 Contract smoke\" --no-report-events"
+  },
+  "dependencies": {
+    "@supabase/ssr": "0.8.0",
+    "@supabase/supabase-js": "2.119.0",
+    "next": "16.4.5",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "0.5.15",
+    "@types/node": "24.19.2",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "prettier": "3.9.10",
+    "typescript": "5.9.3",
+    "vitest": "4.1.12"
+  }
+}

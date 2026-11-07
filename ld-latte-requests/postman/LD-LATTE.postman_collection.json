@@ -1,0 +1,1847 @@
+{
+  "info": {
+    "name": "LD LATTE — API and Supabase RLS",
+    "description": "Run 00 Contract smoke without Supabase. Run 01 Integration and RLS against a dedicated configured test project. Read docs/TESTING.md first. Uses two users and run-local bearer tokens. Creates test records; no destructive cleanup.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "00 Contract smoke",
+      "item": [
+        {
+          "name": "Same-origin signup reaches validation",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Origin",
+                "value": "{{base_url}}"
+              }
+            ],
+            "url": "{{base_url}}/api/auth/signup",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 400', () => pm.response.to.have.status(400));",
+                  "const body = pm.response.json();",
+                  "pm.test(\"code = VALIDATION_ERROR\", () => { pm.expect(body.code).to.eql(\"VALIDATION_ERROR\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Invalid signup data",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/auth/signup",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"bad\",\n  \"password\": \"123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 400', () => pm.response.to.have.status(400));",
+                  "const body = pm.response.json();",
+                  "pm.test(\"code = VALIDATION_ERROR\", () => { pm.expect(body.code).to.eql(\"VALIDATION_ERROR\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Malformed JSON",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/auth/login",
+            "body": {
+              "mode": "raw",
+              "raw": "{broken",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 400', () => pm.response.to.have.status(400));",
+                  "const body = pm.response.json();",
+                  "pm.test(\"code = INVALID_JSON\", () => { pm.expect(body.code).to.eql(\"INVALID_JSON\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Unsupported content type",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "text/plain"
+              }
+            ],
+            "url": "{{base_url}}/api/auth/login",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 415', () => pm.response.to.have.status(415));",
+                  "const body = pm.response.json();",
+                  "pm.test(\"code = UNSUPPORTED_MEDIA_TYPE\", () => { pm.expect(body.code).to.eql(\"UNSUPPORTED_MEDIA_TYPE\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Cross-origin write",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Origin",
+                "value": "https://untrusted.example"
+              }
+            ],
+            "url": "{{base_url}}/api/auth/login",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 403', () => pm.response.to.have.status(403));",
+                  "const body = pm.response.json();",
+                  "pm.test(\"code = ORIGIN_REJECTED\", () => { pm.expect(body.code).to.eql(\"ORIGIN_REJECTED\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Unexpected auth fields",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/auth/signup",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"test@example.com\",\n  \"password\": \"Good-test-pass123\",\n  \"admin\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 400', () => pm.response.to.have.status(400));",
+                  "const body = pm.response.json();",
+                  "pm.test(\"code = VALIDATION_ERROR\", () => { pm.expect(body.code).to.eql(\"VALIDATION_ERROR\"); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "01 Integration and RLS",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "",
+              "if (!pm.variables.get('run_id')) {",
+              "  const id = pm.variables.replaceIn('{{$guid}}');",
+              "  pm.variables.set('run_id', id);",
+              "  pm.variables.set('request_a', pm.variables.replaceIn('{{$guid}}'));",
+              "  pm.variables.set('request_b', pm.variables.replaceIn('{{$guid}}'));",
+              "  pm.variables.set('search_title', 'Postman ' + id);",
+              "  const domain = pm.environment.get('email_domain') || 'example.com';",
+              "  for (const user of ['a', 'b']) {",
+              "    const email = pm.environment.get('email_' + user);",
+              "    pm.variables.set('existing_' + user, Boolean(email));",
+              "    pm.variables.set('email_' + user, email || 'latte.' + id + '.' + user + '@' + domain);",
+              "    pm.variables.set('password_' + user, pm.environment.get('password_' + user) || 'Latte-Test!' + id);",
+              "  }",
+              "}",
+              ""
+            ]
+          }
+        }
+      ],
+      "item": [
+        {
+          "name": "Register A (skip if existing)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/auth/signup",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{email_a}}\",\n  \"password\": \"{{password_a}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["if (pm.variables.get('existing_a')) pm.execution.skipRequest();"]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 201', () => pm.response.to.have.status(201));",
+                  "const body = pm.response.json();",
+                  "pm.test(\"Регистрация возвращает признак подтверждения\", () => { pm.expect(body.confirmationRequired).to.be.a('boolean'); });",
+                  "pm.test(\"Для автоматического нового пользователя подтверждение отключено\", () => { pm.expect(body.confirmationRequired, 'Use confirmed existing accounts or disable Confirm email in a dedicated test project').to.eql(false); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Register B (skip if existing)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/auth/signup",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{email_b}}\",\n  \"password\": \"{{password_b}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["if (pm.variables.get('existing_b')) pm.execution.skipRequest();"]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 201', () => pm.response.to.have.status(201));",
+                  "const body = pm.response.json();",
+                  "pm.test(\"Регистрация возвращает признак подтверждения\", () => { pm.expect(body.confirmationRequired).to.be.a('boolean'); });",
+                  "pm.test(\"Для автоматического нового пользователя подтверждение отключено\", () => { pm.expect(body.confirmationRequired, 'Use confirmed existing accounts or disable Confirm email in a dedicated test project').to.eql(false); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Cookie login A",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/auth/login",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{email_a}}\",\n  \"password\": \"{{password_a}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test(\"Вернулась почта А\", () => { pm.expect(body.user.email).to.eql(pm.variables.get('email_a').toLowerCase()); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Cookie session A",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/auth/session"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test(\"Сессия принадлежит А\", () => { pm.expect(body.user.email).to.eql(pm.variables.get('email_a').toLowerCase()); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Cookie logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/auth/logout",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test(\"ok = true\", () => { pm.expect(body.ok).to.eql(true); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Cookie session after logout",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{base_url}}/api/auth/session"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 401', () => pm.response.to.have.status(401));",
+                  "const body = pm.response.json();",
+                  "pm.test(\"code = UNAUTHORIZED\", () => { pm.expect(body.code).to.eql(\"UNAUTHORIZED\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Supabase token A",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "apikey",
+                "value": "{{supabase_key}}"
+              }
+            ],
+            "url": "{{supabase_url}}/auth/v1/token?grant_type=password",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{email_a}}\",\n  \"password\": \"{{password_a}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test(\"Токен и пользователь получены\", () => { pm.expect(body.access_token).to.be.a('string').and.not.empty; pm.expect(body.user.id).to.be.a('string'); });",
+                  "pm.variables.set('token_a', body.access_token); pm.variables.set('user_a', body.user.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Supabase token B",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "apikey",
+                "value": "{{supabase_key}}"
+              }
+            ],
+            "url": "{{supabase_url}}/auth/v1/token?grant_type=password",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{email_b}}\",\n  \"password\": \"{{password_b}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test(\"Токен и пользователь получены\", () => { pm.expect(body.access_token).to.be.a('string').and.not.empty; pm.expect(body.user.id).to.be.a('string'); });",
+                  "pm.variables.set('token_b', body.access_token); pm.variables.set('user_b', body.user.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Invalid bearer token",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer invalid-token"
+              }
+            ],
+            "url": "{{base_url}}/api/requests"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 401', () => pm.response.to.have.status(401));",
+                  "const body = pm.response.json();",
+                  "pm.test(\"code = UNAUTHORIZED\", () => { pm.expect(body.code).to.eql(\"UNAUTHORIZED\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create A",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_a}}"
+              }
+            ],
+            "url": "{{base_url}}/api/requests",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": \"{{request_a}}\",\n  \"title\": \"{{search_title}}\",\n  \"description\": \"Собирать заявки без ручного переноса\",\n  \"category\": \"Бот\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 201', () => pm.response.to.have.status(201));",
+                  "const body = pm.response.json();",
+                  "pm.test(\"Владелец — пользователь А\", () => { pm.expect(body.data.user_id).to.eql(pm.variables.get('user_a'));  });",
+                  "pm.test(\"data.status = Новая\", () => { pm.expect(body.data.status).to.eql(\"Новая\"); });",
+                  "pm.test(\"replayed = false\", () => { pm.expect(body.replayed).to.eql(false); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Replay create A",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_a}}"
+              }
+            ],
+            "url": "{{base_url}}/api/requests",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": \"{{request_a}}\",\n  \"title\": \"{{search_title}}\",\n  \"description\": \"Собирать заявки без ручного переноса\",\n  \"category\": \"Бот\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test(\"replayed = true\", () => { pm.expect(body.replayed).to.eql(true); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Conflicting create A",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_a}}"
+              }
+            ],
+            "url": "{{base_url}}/api/requests",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": \"{{request_a}}\",\n  \"title\": \"Изменённый запрос\",\n  \"description\": \"Собирать заявки без ручного переноса\",\n  \"category\": \"Бот\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 409', () => pm.response.to.have.status(409));",
+                  "const body = pm.response.json();",
+                  "pm.test(\"code = ID_CONFLICT\", () => { pm.expect(body.code).to.eql(\"ID_CONFLICT\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Exactly one A after retry",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_a}}"
+              }
+            ],
+            "url": "{{base_url}}/api/requests?q={{search_title}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test(\"total = 1\", () => { pm.expect(body.total).to.eql(1); });",
+                  "pm.test(\"Одна запись с нужным ID\", () => { pm.expect(body.data).to.have.lengthOf(1); pm.expect(body.data[0].id).to.eql(pm.variables.get('request_a')); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Read A after separate request",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_a}}"
+              }
+            ],
+            "url": "{{base_url}}/api/requests/{{request_a}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test(\"Владелец — пользователь А\", () => { pm.expect(body.data.user_id).to.eql(pm.variables.get('user_a'));  });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Edit A and set in progress",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_a}}"
+              }
+            ],
+            "url": "{{base_url}}/api/requests/{{request_a}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"description\": \"Изменённое описание\",\n  \"category\": \"Интеграция\",\n  \"status\": \"В работе\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test(\"data.description = Изменённое описание\", () => { pm.expect(body.data.description).to.eql(\"Изменённое описание\"); });",
+                  "pm.test(\"data.category = Интеграция\", () => { pm.expect(body.data.category).to.eql(\"Интеграция\"); });",
+                  "pm.test(\"data.status = В работе\", () => { pm.expect(body.data.status).to.eql(\"В работе\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Combined title search and status",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_a}}"
+              }
+            ],
+            "url": "{{base_url}}/api/requests?q={{search_title}}&status=%D0%92%20%D1%80%D0%B0%D0%B1%D0%BE%D1%82%D0%B5"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test(\"total = 1\", () => { pm.expect(body.total).to.eql(1); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Nonmatching status",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_a}}"
+              }
+            ],
+            "url": "{{base_url}}/api/requests?q={{search_title}}&status=%D0%9D%D0%BE%D0%B2%D0%B0%D1%8F"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test(\"total = 0\", () => { pm.expect(body.total).to.eql(0); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Empty search result",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_a}}"
+              }
+            ],
+            "url": "{{base_url}}/api/requests?q=missing-{{run_id}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test(\"total = 0\", () => { pm.expect(body.total).to.eql(0); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Invalid list status",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_a}}"
+              }
+            ],
+            "url": "{{base_url}}/api/requests?status=Invalid"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 400', () => pm.response.to.have.status(400));",
+                  "const body = pm.response.json();",
+                  "pm.test(\"code = VALIDATION_ERROR\", () => { pm.expect(body.code).to.eql(\"VALIDATION_ERROR\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Invalid page",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_a}}"
+              }
+            ],
+            "url": "{{base_url}}/api/requests?page=0"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 400', () => pm.response.to.have.status(400));",
+                  "const body = pm.response.json();",
+                  "pm.test(\"code = VALIDATION_ERROR\", () => { pm.expect(body.code).to.eql(\"VALIDATION_ERROR\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Invalid request ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_a}}"
+              }
+            ],
+            "url": "{{base_url}}/api/requests/bad-id"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 400', () => pm.response.to.have.status(400));",
+                  "const body = pm.response.json();",
+                  "pm.test(\"code = VALIDATION_ERROR\", () => { pm.expect(body.code).to.eql(\"VALIDATION_ERROR\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Blank required field",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_a}}"
+              }
+            ],
+            "url": "{{base_url}}/api/requests",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": \"{{request_a}}\",\n  \"title\": \"   \",\n  \"description\": \"Собирать заявки без ручного переноса\",\n  \"category\": \"Бот\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 400', () => pm.response.to.have.status(400));",
+                  "const body = pm.response.json();",
+                  "pm.test(\"code = VALIDATION_ERROR\", () => { pm.expect(body.code).to.eql(\"VALIDATION_ERROR\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Invalid category",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_a}}"
+              }
+            ],
+            "url": "{{base_url}}/api/requests",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": \"{{request_a}}\",\n  \"title\": \"{{search_title}}\",\n  \"description\": \"Собирать заявки без ручного переноса\",\n  \"category\": \"Unknown\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 400', () => pm.response.to.have.status(400));",
+                  "const body = pm.response.json();",
+                  "pm.test(\"code = VALIDATION_ERROR\", () => { pm.expect(body.code).to.eql(\"VALIDATION_ERROR\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Cannot inject owner through API",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_a}}"
+              }
+            ],
+            "url": "{{base_url}}/api/requests",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": \"{{request_a}}\",\n  \"title\": \"{{search_title}}\",\n  \"description\": \"Собирать заявки без ручного переноса\",\n  \"category\": \"Бот\",\n  \"user_id\": \"{{user_b}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 400', () => pm.response.to.have.status(400));",
+                  "const body = pm.response.json();",
+                  "pm.test(\"code = VALIDATION_ERROR\", () => { pm.expect(body.code).to.eql(\"VALIDATION_ERROR\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Cannot inject initial status",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_a}}"
+              }
+            ],
+            "url": "{{base_url}}/api/requests",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": \"{{request_a}}\",\n  \"title\": \"{{search_title}}\",\n  \"description\": \"Собирать заявки без ручного переноса\",\n  \"category\": \"Бот\",\n  \"status\": \"Завершена\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 400', () => pm.response.to.have.status(400));",
+                  "const body = pm.response.json();",
+                  "pm.test(\"code = VALIDATION_ERROR\", () => { pm.expect(body.code).to.eql(\"VALIDATION_ERROR\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Empty patch",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_a}}"
+              }
+            ],
+            "url": "{{base_url}}/api/requests/{{request_a}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 400', () => pm.response.to.have.status(400));",
+                  "const body = pm.response.json();",
+                  "pm.test(\"code = VALIDATION_ERROR\", () => { pm.expect(body.code).to.eql(\"VALIDATION_ERROR\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Cannot update owner through API",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_a}}"
+              }
+            ],
+            "url": "{{base_url}}/api/requests/{{request_a}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"user_id\": \"{{user_b}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 400', () => pm.response.to.have.status(400));",
+                  "const body = pm.response.json();",
+                  "pm.test(\"code = VALIDATION_ERROR\", () => { pm.expect(body.code).to.eql(\"VALIDATION_ERROR\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "B cannot read A",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_b}}"
+              }
+            ],
+            "url": "{{base_url}}/api/requests/{{request_a}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 404', () => pm.response.to.have.status(404));",
+                  "const body = pm.response.json();",
+                  "pm.test(\"code = NOT_FOUND\", () => { pm.expect(body.code).to.eql(\"NOT_FOUND\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "B cannot update A",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_b}}"
+              }
+            ],
+            "url": "{{base_url}}/api/requests/{{request_a}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Взлом\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 404', () => pm.response.to.have.status(404));",
+                  "const body = pm.response.json();",
+                  "pm.test(\"code = NOT_FOUND\", () => { pm.expect(body.code).to.eql(\"NOT_FOUND\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "B list excludes A",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_b}}"
+              }
+            ],
+            "url": "{{base_url}}/api/requests?q={{search_title}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test(\"total = 0\", () => { pm.expect(body.total).to.eql(0); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create B",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_b}}"
+              }
+            ],
+            "url": "{{base_url}}/api/requests",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": \"{{request_b}}\",\n  \"title\": \"Заявка Б {{run_id}}\",\n  \"description\": \"Только для пользователя Б\",\n  \"category\": \"Отчёт\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 201', () => pm.response.to.have.status(201));",
+                  "const body = pm.response.json();",
+                  "pm.test(\"Владелец — Б\", () => { pm.expect(body.data.user_id).to.eql(pm.variables.get('user_b')); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "A cannot read B",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_a}}"
+              }
+            ],
+            "url": "{{base_url}}/api/requests/{{request_b}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 404', () => pm.response.to.have.status(404));",
+                  "const body = pm.response.json();",
+                  "pm.test(\"code = NOT_FOUND\", () => { pm.expect(body.code).to.eql(\"NOT_FOUND\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Direct REST A can read own row",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "apikey",
+                "value": "{{supabase_key}}"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_a}}"
+              }
+            ],
+            "url": "{{supabase_url}}/rest/v1/requests?id=eq.{{request_a}}&select=*"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test(\"Одна своя запись\", () => { pm.expect(body).to.have.lengthOf(1); pm.expect(body[0].user_id).to.eql(pm.variables.get('user_a')); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Direct REST B cannot read A",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "apikey",
+                "value": "{{supabase_key}}"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_b}}"
+              }
+            ],
+            "url": "{{supabase_url}}/rest/v1/requests?id=eq.{{request_a}}&select=*"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test(\"RLS возвращает пустой массив\", () => { pm.expect(body).to.eql([]); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Direct REST B cannot update A",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "apikey",
+                "value": "{{supabase_key}}"
+              },
+              {
+                "key": "Prefer",
+                "value": "return=representation"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_b}}"
+              }
+            ],
+            "url": "{{supabase_url}}/rest/v1/requests?id=eq.{{request_a}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Взлом через REST\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test(\"Нет изменённых строк\", () => { pm.expect(body).to.eql([]); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Direct REST cannot forge owner on insert",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "apikey",
+                "value": "{{supabase_key}}"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_b}}"
+              }
+            ],
+            "url": "{{supabase_url}}/rest/v1/requests",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"user_id\": \"{{user_a}}\",\n  \"title\": \"Чужая заявка\",\n  \"description\": \"X\",\n  \"category\": \"Бот\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 403', () => pm.response.to.have.status(403));",
+                  "const body = pm.response.json();",
+                  "pm.test(\"code = 42501\", () => { pm.expect(body.code).to.eql(\"42501\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Direct REST cannot change owner",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "apikey",
+                "value": "{{supabase_key}}"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_a}}"
+              }
+            ],
+            "url": "{{supabase_url}}/rest/v1/requests?id=eq.{{request_a}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"user_id\": \"{{user_b}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 403', () => pm.response.to.have.status(403));",
+                  "const body = pm.response.json();",
+                  "pm.test(\"code = 42501\", () => { pm.expect(body.code).to.eql(\"42501\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Direct REST cannot change creation time",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "apikey",
+                "value": "{{supabase_key}}"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_a}}"
+              }
+            ],
+            "url": "{{supabase_url}}/rest/v1/requests?id=eq.{{request_a}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"created_at\": \"2000-01-01T00:00:00Z\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 403', () => pm.response.to.have.status(403));",
+                  "const body = pm.response.json();",
+                  "pm.test(\"code = 42501\", () => { pm.expect(body.code).to.eql(\"42501\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Direct REST cannot choose initial status",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "apikey",
+                "value": "{{supabase_key}}"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_a}}"
+              }
+            ],
+            "url": "{{supabase_url}}/rest/v1/requests",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"X\",\n  \"description\": \"Y\",\n  \"category\": \"Бот\",\n  \"status\": \"Завершена\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 403', () => pm.response.to.have.status(403));",
+                  "const body = pm.response.json();",
+                  "pm.test(\"code = 42501\", () => { pm.expect(body.code).to.eql(\"42501\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Direct REST category constraint",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "apikey",
+                "value": "{{supabase_key}}"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_a}}"
+              }
+            ],
+            "url": "{{supabase_url}}/rest/v1/requests",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"X\",\n  \"description\": \"Y\",\n  \"category\": \"Invalid\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 400', () => pm.response.to.have.status(400));",
+                  "const body = pm.response.json();",
+                  "pm.test(\"code = 23514\", () => { pm.expect(body.code).to.eql(\"23514\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Direct REST cannot delete",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "apikey",
+                "value": "{{supabase_key}}"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_a}}"
+              }
+            ],
+            "url": "{{supabase_url}}/rest/v1/requests?id=eq.{{request_a}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 403', () => pm.response.to.have.status(403));",
+                  "const body = pm.response.json();",
+                  "pm.test(\"code = 42501\", () => { pm.expect(body.code).to.eql(\"42501\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Verify A unchanged after all attacks",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_a}}"
+              }
+            ],
+            "url": "{{base_url}}/api/requests/{{request_a}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test(\"Заявка не изменена атакой\", () => { pm.expect(body.data.title).to.eql(pm.variables.get('search_title')); pm.expect(body.data.status).to.eql('В работе'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Complete A",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_a}}"
+              }
+            ],
+            "url": "{{base_url}}/api/requests/{{request_a}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"Завершена\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test(\"data.status = Завершена\", () => { pm.expect(body.data.status).to.eql(\"Завершена\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Completed filter",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_a}}"
+              }
+            ],
+            "url": "{{base_url}}/api/requests?q={{search_title}}&status=%D0%97%D0%B0%D0%B2%D0%B5%D1%80%D1%88%D0%B5%D0%BD%D0%B0"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test(\"total = 1\", () => { pm.expect(body.total).to.eql(1); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

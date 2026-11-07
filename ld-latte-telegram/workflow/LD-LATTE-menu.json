@@ -1,0 +1,168 @@
+{
+  "id": "ldLatteDynamicMenu",
+  "name": "LD LATTE — dynamic Telegram services",
+  "active": false,
+  "nodes": [
+    {
+      "id": "input",
+      "name": "Telegram update",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "ld-latte-menu",
+        "authentication": "headerAuth",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "webhookId": "5f577145-f5f1-4686-90fb-fcc5ac197e09",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "latteRelayHeader",
+          "name": "LD LATTE relay header"
+        }
+      }
+    },
+    {
+      "id": "normalize",
+      "name": "Normalize update",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        0
+      ],
+      "parameters": {
+        "jsCode": "// Shared pure functions; the generator embeds this exact code in n8n Code nodes.\n// Telegram transport and database credentials are intentionally absent here.\nfunction normalizeUpdate(envelope) {\n  const update = envelope?.update;\n  if (!Number.isSafeInteger(update?.update_id) || update.update_id < 0) {\n    return {action: 'ignore', reason: 'invalid_update'};\n  }\n  const callback = update.callback_query;\n  const message = callback ? callback.message : update.message;\n  const actor = callback ? callback.from : message?.from;\n  const chat = message?.chat;\n  if (chat?.type !== 'private' || !Number.isSafeInteger(chat.id) || chat.id <= 0 || actor?.id !== chat.id || actor?.is_bot) {\n    return {action: 'ignore', reason: 'private_chat_only'};\n  }\n  const context = {updateId: update.update_id, chatId: chat.id};\n  if (callback) {\n    const match = /^svc:([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/i.exec(callback.data ?? '');\n    return {...context, action: match ? 'select' : 'invalid_callback', serviceId: match ? match[1].toLowerCase() : ''};\n  }\n  const match = /^\\/start(?:@([a-z0-9_]+))?(?:\\s+.*)?$/i.exec(message.text?.trim() ?? '');\n  if (match?.[1] && match[1].toLowerCase() !== String(envelope.bot_username ?? '').toLowerCase()) {\n    return {...context, action: 'ignore', reason: 'other_bot'};\n  }\n  return {...context, action: match ? 'start' : 'help', serviceId: ''};\n}\n\nfunction buildResponse(context, services) {\n  if (context.action === 'ignore') return {actions: []};\n  if (!Array.isArray(services)) throw new Error('Invalid catalog response');\n  const active = services.filter(row => row.active === true);\n  const send = (text, keyboard) => ({method: 'sendMessage', body: {\n    chat_id: context.chatId,\n    text,\n    ...(keyboard ? {reply_markup: {inline_keyboard: keyboard}} : {}),\n  }});\n  if (context.action === 'start') {\n    if (!active.length) return {actions: [send('Сейчас активных услуг нет. Пожалуйста, попробуйте позже.')]};\n    const actions = [];\n    // One row per service; split large catalogs without hiding any active service.\n    for (let i = 0; i < active.length; i += 50) {\n      const rows = active.slice(i, i + 50).map(row => [{text: row.name, callback_data: `svc:${row.id}`}]);\n      actions.push(send(i ? 'Продолжение списка услуг:' : 'Здравствуйте! Выберите услугу:', rows));\n    }\n    return {actions};\n  }\n  if (context.action === 'select') {\n    const selected = active.find(row => row.id.toLowerCase() === context.serviceId);\n    return {actions: [send(selected ? `Вы выбрали: ${selected.name}` : 'Эта услуга больше недоступна. Обновите меню: /start')]};\n  }\n  if (context.action === 'invalid_callback') return {actions: [send('Не удалось определить услугу. Обновите меню: /start')]};\n  return {actions: [send('Чтобы увидеть актуальные услуги, отправьте /start.')]};\n}\n\nreturn [{json:normalizeUpdate($input.first().json.body)}];"
+      }
+    },
+    {
+      "id": "catalog",
+      "name": "Read current services",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.8,
+      "position": [
+        480,
+        0
+      ],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT coalesce(jsonb_agg(jsonb_build_object('id', id, 'name', name, 'active', active) ORDER BY sort_order, id), '[]'::jsonb) AS services\nFROM catalog.services\nWHERE active = true AND ($1::text = 'start' OR id::text = $2::text);",
+        "options": {
+          "queryReplacement": "={{ [$json.action, $json.serviceId || \"\"] }}"
+        }
+      },
+      "credentials": {
+        "postgres": {
+          "id": "latteCatalogRead",
+          "name": "LD LATTE catalog read only"
+        }
+      }
+    },
+    {
+      "id": "response",
+      "name": "Build dynamic response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        720,
+        0
+      ],
+      "parameters": {
+        "jsCode": "// Shared pure functions; the generator embeds this exact code in n8n Code nodes.\n// Telegram transport and database credentials are intentionally absent here.\nfunction normalizeUpdate(envelope) {\n  const update = envelope?.update;\n  if (!Number.isSafeInteger(update?.update_id) || update.update_id < 0) {\n    return {action: 'ignore', reason: 'invalid_update'};\n  }\n  const callback = update.callback_query;\n  const message = callback ? callback.message : update.message;\n  const actor = callback ? callback.from : message?.from;\n  const chat = message?.chat;\n  if (chat?.type !== 'private' || !Number.isSafeInteger(chat.id) || chat.id <= 0 || actor?.id !== chat.id || actor?.is_bot) {\n    return {action: 'ignore', reason: 'private_chat_only'};\n  }\n  const context = {updateId: update.update_id, chatId: chat.id};\n  if (callback) {\n    const match = /^svc:([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/i.exec(callback.data ?? '');\n    return {...context, action: match ? 'select' : 'invalid_callback', serviceId: match ? match[1].toLowerCase() : ''};\n  }\n  const match = /^\\/start(?:@([a-z0-9_]+))?(?:\\s+.*)?$/i.exec(message.text?.trim() ?? '');\n  if (match?.[1] && match[1].toLowerCase() !== String(envelope.bot_username ?? '').toLowerCase()) {\n    return {...context, action: 'ignore', reason: 'other_bot'};\n  }\n  return {...context, action: match ? 'start' : 'help', serviceId: ''};\n}\n\nfunction buildResponse(context, services) {\n  if (context.action === 'ignore') return {actions: []};\n  if (!Array.isArray(services)) throw new Error('Invalid catalog response');\n  const active = services.filter(row => row.active === true);\n  const send = (text, keyboard) => ({method: 'sendMessage', body: {\n    chat_id: context.chatId,\n    text,\n    ...(keyboard ? {reply_markup: {inline_keyboard: keyboard}} : {}),\n  }});\n  if (context.action === 'start') {\n    if (!active.length) return {actions: [send('Сейчас активных услуг нет. Пожалуйста, попробуйте позже.')]};\n    const actions = [];\n    // One row per service; split large catalogs without hiding any active service.\n    for (let i = 0; i < active.length; i += 50) {\n      const rows = active.slice(i, i + 50).map(row => [{text: row.name, callback_data: `svc:${row.id}`}]);\n      actions.push(send(i ? 'Продолжение списка услуг:' : 'Здравствуйте! Выберите услугу:', rows));\n    }\n    return {actions};\n  }\n  if (context.action === 'select') {\n    const selected = active.find(row => row.id.toLowerCase() === context.serviceId);\n    return {actions: [send(selected ? `Вы выбрали: ${selected.name}` : 'Эта услуга больше недоступна. Обновите меню: /start')]};\n  }\n  if (context.action === 'invalid_callback') return {actions: [send('Не удалось определить услугу. Обновите меню: /start')]};\n  return {actions: [send('Чтобы увидеть актуальные услуги, отправьте /start.')]};\n}\n\nreturn [{json:buildResponse($(\"Normalize update\").first().json,$input.first().json.services)}];"
+      }
+    },
+    {
+      "id": "respond",
+      "name": "Return Telegram requests",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        960,
+        0
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {
+          "responseCode": 200
+        }
+      }
+    },
+    {
+      "id": "note",
+      "name": "How it works",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        180,
+        -300
+      ],
+      "parameters": {
+        "width": 780,
+        "height": 220,
+        "content": "## LD LATTE · динамическое меню\nЛокальный relay получает Telegram updates через getUpdates и передаёт их сюда с секретным заголовком.\nКаждый /start и каждый callback заново читают PostgreSQL. Code собирает тело sendMessage и inline_keyboard из строк БД. Relay отправляет готовые запросы в Telegram.\nДобавление, удаление, переименование и active меняются только в таблице.\nЭкспорт не содержит токенов и паролей. Credentials привязываются при импорте."
+      }
+    }
+  ],
+  "connections": {
+    "Telegram update": {
+      "main": [
+        [
+          {
+            "node": "Normalize update",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize update": {
+      "main": [
+        [
+          {
+            "node": "Read current services",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read current services": {
+      "main": [
+        [
+          {
+            "node": "Build dynamic response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build dynamic response": {
+      "main": [
+        [
+          {
+            "node": "Return Telegram requests",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataSuccessExecution": "none",
+    "saveDataErrorExecution": "none",
+    "saveManualExecutions": false,
+    "executionTimeout": 60
+  },
+  "pinData": {},
+  "versionId": "c597deee-11aa-4fdf-aac2-2c6a5f19a4c1",
+  "tags": []
+}

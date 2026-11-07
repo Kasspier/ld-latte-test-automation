@@ -1,0 +1,309 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>
+      LD LATTE — проверка Telegram-бота
+    </title>
+    <style>
+      * {
+        box-sizing:border-box;
+      }
+      body {
+        margin:0;
+        background:#f6f4ef;
+        color:#233c32;
+        font:16px/1.6 "Segoe UI",Arial,sans-serif;
+      }
+      main {
+        max-width:1000px;
+        margin:auto;
+        padding:45px 24px;
+      }
+      header {
+        padding:25px 0 36px;
+        border-bottom:1px solid #d4ded5;
+      }
+      h1 {
+        font:44px/1.1 Georgia,serif;
+        max-width:700px;
+      }
+      h2 {
+        font:30px/1.2 Georgia,serif;
+      }
+      p {
+        color:#53665e;
+      }
+      a {
+        color:#234e41;
+      }
+      small {
+        color:#64736c;
+      }
+      article {
+        display:grid;
+        grid-template-columns:1fr 330px;
+        gap:36px;
+        background:white;
+        border:1px solid #d8e0d8;
+        border-radius:16px;
+        padding:28px;
+        margin:25px 0;
+        break-inside:avoid;
+      }
+      article img {
+        display:block;
+        width:100%;
+        border-radius:9px;
+      }
+      article span {
+        font-size:11px;
+        font-weight:700;
+        letter-spacing:2px;
+        color:#39715c;
+      }
+      .note {
+        padding:20px 24px;
+        background:#e6eee5;
+        border-radius:12px;
+        margin-top:24px;
+      }
+      code {
+        overflow-wrap:anywhere;
+        font-size:12px;
+      }
+      @media(max-width:650px) {
+        article {
+          grid-template-columns:1fr;
+          padding:20px;
+        }
+        article img {
+          max-width:400px;
+          margin:auto;
+        }
+        h1 {
+          font-size:36px;
+        }
+      }
+      @media print {
+        body {
+          background:white;
+        }
+        article {
+          grid-template-columns:1fr 230px;
+          margin:16px 0;
+        }
+        main {
+          padding:0;
+        }
+        h1 {
+          font-size:30px;
+        }
+        article img {
+          max-height:650px;
+          object-fit:contain;
+        }
+        @page {
+          size:A4;
+          margin:15mm;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <small>
+          LD LATTE / ЗАДАЧА №1 / 7 НОЯБРЯ 2026
+        </small>
+        <h1>
+          Полная проверка Telegram-бота
+        </h1>
+        <p>
+          Реальные сообщения и нажатия в Telegram Desktop. Проверенный бот:
+          <a href="https://t.me/ld_latte_tested_bot">
+            @ld_latte_tested_bot
+          </a>
+          . Снимки обрезаны до области тестовой переписки; содержание сообщений не изменено.
+        </p>
+        <div class="note">
+          <strong>
+            Все обязательные сценарии пройдены.
+          </strong>
+          <p>
+            Меню 2/5/9/0, выбор по ID, добавление, переименование, отключение и удаление. Workflow не редактировался, n8n не перезапускался. В конце восстановлены исходные названия и две активные услуги.
+          </p>
+        </div>
+      </header>
+      <article>
+        <div class="copy">
+          <span>
+            ПРОЙДЕНО
+          </span>
+          <h2>
+            Меню: 2 услуги
+          </h2>
+          <p>
+            Отправлена новая /start. В меню две активные услуги; нажатия обеих кнопок вернули соответствующие названия.
+          </p>
+        </div>
+        <img alt="Меню: 2 услуги — снимок Telegram Desktop" src="telegram/menu-2.png">
+      </article>
+      <article>
+        <div class="copy">
+          <span>
+            ПРОЙДЕНО
+          </span>
+          <h2>
+            Меню: 5 услуг
+          </h2>
+          <p>
+            Изменена только активность в таблице. Новая /start показала пять кнопок; пятая вернула «Синхронизация остатков».
+          </p>
+        </div>
+        <img alt="Меню: 5 услуг — снимок Telegram Desktop" src="telegram/menu-5.png">
+      </article>
+      <article>
+        <div class="copy">
+          <span>
+            ПРОЙДЕНО
+          </span>
+          <h2>
+            Меню: 9 услуг
+          </h2>
+          <p>
+            Новая /start показала все девять активных услуг. Девятая кнопка вернула «Проверка качества данных».
+          </p>
+        </div>
+        <img alt="Меню: 9 услуг — снимок Telegram Desktop" src="telegram/menu-9.png">
+      </article>
+      <article>
+        <div class="copy">
+          <span>
+            ПРОЙДЕНО
+          </span>
+          <h2>
+            Переименование и старая кнопка
+          </h2>
+          <p>
+            В таблице изменено имя первой услуги. Кнопка из старого меню вернула новое имя: «Бот записи — новое название». Это подтверждает выбор по ID.
+          </p>
+        </div>
+        <img alt="Переименование и старая кнопка — снимок Telegram Desktop" src="telegram/rename-old-button.png">
+      </article>
+      <article>
+        <div class="copy">
+          <span>
+            ПРОЙДЕНО
+          </span>
+          <h2>
+            Новая подпись после /start
+          </h2>
+          <p>
+            После повторной /start кнопка показала новое название из таблицы.
+          </p>
+        </div>
+        <img alt="Новая подпись после /start — снимок Telegram Desktop" src="telegram/menu-renamed.png">
+      </article>
+      <article>
+        <div class="copy">
+          <span>
+            ПРОЙДЕНО
+          </span>
+          <h2>
+            Отключение и старая кнопка
+          </h2>
+          <p>
+            У второй услуги выключена активность. Старая кнопка вернула «Эта услуга больше недоступна. Обновите меню: /start».
+          </p>
+        </div>
+        <img alt="Отключение и старая кнопка — снимок Telegram Desktop" src="telegram/disabled-old-button.png">
+      </article>
+      <article>
+        <div class="copy">
+          <span>
+            ПРОЙДЕНО
+          </span>
+          <h2>
+            Меню после отключения
+          </h2>
+          <p>
+            Новая /start показала только одну активную услугу, без отключённой CRM-интеграции.
+          </p>
+        </div>
+        <img alt="Меню после отключения — снимок Telegram Desktop" src="telegram/menu-disabled.png">
+      </article>
+      <article>
+        <div class="copy">
+          <span>
+            ПРОЙДЕНО
+          </span>
+          <h2>
+            Добавление услуги
+          </h2>
+          <p>
+            Добавлена вымышленная строка «Автоматическая сверка оплат». Новая /start показала её отдельной кнопкой.
+          </p>
+        </div>
+        <img alt="Добавление услуги — снимок Telegram Desktop" src="telegram/menu-added.png">
+      </article>
+      <article>
+        <div class="copy">
+          <span>
+            ПРОЙДЕНО
+          </span>
+          <h2>
+            Выбор добавленной услуги
+          </h2>
+          <p>
+            Нажатие новой кнопки вернуло её название.
+          </p>
+        </div>
+        <img alt="Выбор добавленной услуги — снимок Telegram Desktop" src="telegram/added-selection.png">
+      </article>
+      <article>
+        <div class="copy">
+          <span>
+            ПРОЙДЕНО
+          </span>
+          <h2>
+            Удаление и старая кнопка
+          </h2>
+          <p>
+            Удалена только добавленная для проверки строка. Старая кнопка безопасно сообщила, что услуга больше недоступна.
+          </p>
+        </div>
+        <img alt="Удаление и старая кнопка — снимок Telegram Desktop" src="telegram/deleted-old-button.png">
+      </article>
+      <article>
+        <div class="copy">
+          <span>
+            ПРОЙДЕНО
+          </span>
+          <h2>
+            Меню после удаления
+          </h2>
+          <p>
+            Повторная /start показала меню без удалённой услуги.
+          </p>
+        </div>
+        <img alt="Меню после удаления — снимок Telegram Desktop" src="telegram/menu-deleted.png">
+      </article>
+      <article>
+        <div class="copy">
+          <span>
+            ПРОЙДЕНО
+          </span>
+          <h2>
+            Нет активных услуг
+          </h2>
+          <p>
+            Выключены все услуги. /start вернула понятное сообщение без клавиатуры: «Сейчас активных услуг нет. Пожалуйста, попробуйте позже».
+          </p>
+        </div>
+        <img alt="Нет активных услуг — снимок Telegram Desktop" src="telegram/menu-empty.png">
+      </article>
+    </main>
+  </body>
+</html>

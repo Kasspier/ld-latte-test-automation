@@ -1,0 +1,27 @@
+{
+  "date": "2026-11-07",
+  "documents": {
+    "index.html": {
+      "sections": 9,
+      "svg_diagrams": 2,
+      "links": 33,
+      "broken_local_links": 0,
+      "external_assets": 0
+    },
+    "technical.html": {
+      "sections": 8,
+      "svg_diagrams": 0,
+      "links": 45,
+      "broken_local_links": 0,
+      "external_assets": 0
+    }
+  },
+  "generator_reproducible": true,
+  "browser_review": {
+    "desktop": "passed",
+    "mobile_viewport": "390x844",
+    "horizontal_page_overflow": false,
+    "cross_document_navigation": "passed"
+  },
+  "real_instagram_integration": "not implemented; not required by task 2"
+}

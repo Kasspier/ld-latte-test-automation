@@ -1,0 +1,16 @@
+**/node_modules/
+**/.next/
+**/.env*
+!**/.env.example
+**/.private/
+**/.tools/
+**/.postman/
+**/test-results/
+**/coverage/
+**/*.tsbuildinfo
+**/postman/*.local.json
+**/postman/*.local.postman_environment.json
+**/delivery/
+**/__pycache__/
+.vercel/
+

@@ -1,0 +1,209 @@
+{
+  "date": "2026-11-07T18:36:28.915Z",
+  "engine": "real n8n + PostgreSQL; synthetic Telegram updates; no Telegram delivery",
+  "cases": [
+    {
+      "name": "dynamic menu: 2 active services",
+      "passed": true
+    },
+    {
+      "name": "dynamic menu: 5 active services",
+      "passed": true
+    },
+    {
+      "name": "dynamic menu: 9 active services",
+      "passed": true
+    },
+    {
+      "name": "dynamic menu: 0 active services",
+      "passed": true
+    },
+    {
+      "name": "different buttons return their corresponding current service name",
+      "passed": true
+    },
+    {
+      "name": "rename affects next start and an already-issued button",
+      "passed": true
+    },
+    {
+      "name": "adding a row adds a button without editing workflow",
+      "passed": true
+    },
+    {
+      "name": "disabled row vanishes and an old button reports unavailability",
+      "passed": true
+    },
+    {
+      "name": "deleted row vanishes and an old button is safe",
+      "passed": true
+    },
+    {
+      "name": "malformed callback does not inject SQL",
+      "passed": true
+    },
+    {
+      "name": "webhook refuses missing and wrong shared secrets",
+      "passed": true
+    },
+    {
+      "name": "workflow database role is read-only",
+      "passed": true
+    }
+  ],
+  "menus": {
+    "0": {
+      "actions": [
+        {
+          "method": "sendMessage",
+          "body": {
+            "chat_id": 424242,
+            "text": "Сейчас активных услуг нет. Пожалуйста, попробуйте позже."
+          }
+        }
+      ]
+    },
+    "2": {
+      "actions": [
+        {
+          "method": "sendMessage",
+          "body": {
+            "chat_id": 424242,
+            "text": "Здравствуйте! Выберите услугу:",
+            "reply_markup": {
+              "inline_keyboard": [
+                [
+                  {
+                    "text": "Бот для записи клиентов",
+                    "callback_data": "svc:00000000-0000-4000-8000-000000000001"
+                  }
+                ],
+                [
+                  {
+                    "text": "Интеграция CRM с сайтом",
+                    "callback_data": "svc:00000000-0000-4000-8000-000000000002"
+                  }
+                ]
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "5": {
+      "actions": [
+        {
+          "method": "sendMessage",
+          "body": {
+            "chat_id": 424242,
+            "text": "Здравствуйте! Выберите услугу:",
+            "reply_markup": {
+              "inline_keyboard": [
+                [
+                  {
+                    "text": "Бот для записи клиентов",
+                    "callback_data": "svc:00000000-0000-4000-8000-000000000001"
+                  }
+                ],
+                [
+                  {
+                    "text": "Интеграция CRM с сайтом",
+                    "callback_data": "svc:00000000-0000-4000-8000-000000000002"
+                  }
+                ],
+                [
+                  {
+                    "text": "Ежедневный отчёт о продажах",
+                    "callback_data": "svc:00000000-0000-4000-8000-000000000003"
+                  }
+                ],
+                [
+                  {
+                    "text": "Уведомления о новых заявках",
+                    "callback_data": "svc:00000000-0000-4000-8000-000000000004"
+                  }
+                ],
+                [
+                  {
+                    "text": "Синхронизация остатков",
+                    "callback_data": "svc:00000000-0000-4000-8000-000000000005"
+                  }
+                ]
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "9": {
+      "actions": [
+        {
+          "method": "sendMessage",
+          "body": {
+            "chat_id": 424242,
+            "text": "Здравствуйте! Выберите услугу:",
+            "reply_markup": {
+              "inline_keyboard": [
+                [
+                  {
+                    "text": "Бот для записи клиентов",
+                    "callback_data": "svc:00000000-0000-4000-8000-000000000001"
+                  }
+                ],
+                [
+                  {
+                    "text": "Интеграция CRM с сайтом",
+                    "callback_data": "svc:00000000-0000-4000-8000-000000000002"
+                  }
+                ],
+                [
+                  {
+                    "text": "Ежедневный отчёт о продажах",
+                    "callback_data": "svc:00000000-0000-4000-8000-000000000003"
+                  }
+                ],
+                [
+                  {
+                    "text": "Уведомления о новых заявках",
+                    "callback_data": "svc:00000000-0000-4000-8000-000000000004"
+                  }
+                ],
+                [
+                  {
+                    "text": "Синхронизация остатков",
+                    "callback_data": "svc:00000000-0000-4000-8000-000000000005"
+                  }
+                ],
+                [
+                  {
+                    "text": "Напоминания о встречах",
+                    "callback_data": "svc:00000000-0000-4000-8000-000000000006"
+                  }
+                ],
+                [
+                  {
+                    "text": "Сбор обратной связи",
+                    "callback_data": "svc:00000000-0000-4000-8000-000000000007"
+                  }
+                ],
+                [
+                  {
+                    "text": "Выгрузка заказов в таблицу",
+                    "callback_data": "svc:00000000-0000-4000-8000-000000000008"
+                  }
+                ],
+                [
+                  {
+                    "text": "Проверка качества данных",
+                    "callback_data": "svc:00000000-0000-4000-8000-000000000009"
+                  }
+                ]
+              ]
+            }
+          }
+        }
+      ]
+    }
+  },
+  "passed": true
+}
