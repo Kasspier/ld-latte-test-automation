@@ -1,5 +1,7 @@
 # Фактическое размещение
 
+Репозиторий сдачи открыт по решению владельца: https://github.com/Kasspier/ld-latte-test-automation/tree/review/all-tasks. Просмотр и скачивание без приглашения; архивация сохраняет режим только чтения.
+
 Сайт: https://ld-latte-requests-omega.vercel.app
 
 - Team: Kasspier (`team_4rFzfSUp3jf65sBz8cd02MfK`), Hobby.
@@ -27,15 +29,12 @@ Git-интеграция Vercel не настроена: попытка связ
 6. Прогнать Postman с `base_url`, равным этому HTTPS URL, и двумя демонстрационными пользователями. Проверить прямые REST-попытки доступа к чужим заявкам.
 7. Добавить действительный URL в главный README и результаты в документацию проверки. Не заменять его localhost или вымышленной ссылкой.
 
-## Приватный GitHub и read-only
+## Публичный GitHub и режим только чтения
 
-Все три задания находятся в одной ветке `review/all-tasks`. Репозиторий создаётся **Private**, без автоматического добавления участников. Для выдачи доступа нужен точный username проверяющего.
+Владелец разрешил публичный доступ ко всем трём заданиям. Ветка: `review/all-tasks`. Репозиторий архивирован, поэтому посетители могут читать и скачивать файлы, но не изменять исходники в этом репозитории. Для исправлений владелец сначала разархивирует его.
 
-- **Репозиторий организации:** пригласить проверяющего с ролью `Read`. Это обычный вариант с разделением прав чтения и записи.
-- **Личный приватный репозиторий:** GitHub не предоставляет read-only роль для collaborator; обычное приглашение даёт запись. Не выдавайте его как «только просмотр».
-- **Зафиксированная сдача личного репозитория:** после завершения можно архивировать отдельный репозиторий сдачи. GitHub делает его read-only для всех; для будущих исправлений владельцу понадобится разархивировать его. Настройка выполняется только после выбора владельцем этого варианта.
+Приглашение и username проверяющего не нужны. Ссылка на комплект ZIP: https://github.com/Kasspier/ld-latte-test-automation/archive/refs/heads/review/all-tasks.zip
 
-Права `Read` не запрещают скачать или скопировать код. Секреты не должны находиться даже в приватной истории Git. Не используйте защиту одной ветки как замену read-only правам на весь репозиторий.
+Публичность позволяет любому скачать и скопировать код. Перед открытием доступа проверена вся история Git: известные локальные секреты и приватные runtime-файлы не найдены.
 
-Источники: [права личного репозитория](https://docs.github.com/en/enterprise-cloud%40latest/repositories/managing-your-repositorys-settings-and-features/repository-access-and-collaboration/permission-levels-for-a-personal-account-repository), [роли организации](https://docs.github.com/en/organizations/managing-user-access-to-your-organizations-repositories/managing-repository-roles/repository-roles-for-an-organization), [архивация](https://docs.github.com/en/repositories/archiving-a-github-repository/archiving-repositories).
-
+Источник режима read-only: https://docs.github.com/en/repositories/archiving-a-github-repository/archiving-repositories
